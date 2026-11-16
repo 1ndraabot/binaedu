@@ -1,0 +1,85 @@
+/** Footer sesuai docs/layouts.md §11: latar gelap, teks putih, 4 kolom. */
+import Link from "next/link";
+import { GraduationCap } from "lucide-react";
+
+const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: "Tentang",
+    links: [
+      { label: "Tentang BinaEdu", href: "#" },
+      { label: "Cara kerja verifikasi", href: "#" },
+      { label: "Kebijakan privasi", href: "#" },
+    ],
+  },
+  {
+    title: "Untuk pengguna",
+    links: [
+      { label: "Cari peluang", href: "/cari" },
+      { label: "Kalender tenggat", href: "#" },
+      { label: "Peluang saya", href: "#" },
+    ],
+  },
+  {
+    title: "Untuk penyelenggara",
+    links: [
+      { label: "Kirim info kegiatan", href: "#" },
+      { label: "Kemitraan", href: "#" },
+    ],
+  },
+  {
+    title: "Kontak",
+    links: [
+      { label: "halo@binaedu.id", href: "mailto:halo@binaedu.id" },
+      { label: "Semarang, Jawa Tengah", href: "#" },
+    ],
+  },
+];
+
+export default function Footer() {
+  return (
+    <footer className="bg-ink-900 text-white">
+      <div className="mx-auto max-w-[1200px] px-4 py-12 md:px-6">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+          <div>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-7 w-7 text-blue-100" aria-hidden="true" />
+              <span className="text-lg font-bold text-white">BinaEdu</span>
+            </div>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
+              Agregator informasi kampus, beasiswa, dan lomba untuk pelajar dan
+              mahasiswa. Diperiksa tim kami sebelum tayang.
+            </p>
+          </div>
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title}>
+              <h3 className="text-sm font-semibold text-white">{col.title}</h3>
+              <ul className="mt-3 space-y-2">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-white/70 transition-colors hover:text-white focus-ring rounded-sm"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+        <div className="mt-10 flex flex-col gap-2 border-t border-white/15 pt-6 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 PT Lentera Bina Teknologi</p>
+          <p className="flex gap-4">
+            <Link href="#" className="hover:text-white focus-ring rounded-sm">
+              Kebijakan privasi
+            </Link>
+            <Link href="#" className="hover:text-white focus-ring rounded-sm">
+              Syarat penggunaan
+            </Link>
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
