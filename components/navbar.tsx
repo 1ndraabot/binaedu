@@ -19,16 +19,17 @@ const LINKS = [
 
 /** Tautan milik sesi — sesuai peran (docs/components.md §2.1). */
 function sessionLinks(user: User) {
-  const links = [
-    { href: "/peluang-saya", label: "Peluang saya" },
-    { href: "/profil", label: "Profil" },
-  ];
-  if (user.role === "penyelenggara" || user.role === "admin") {
-    links.push({ href: "/kirim/saya", label: "Kiriman saya" });
+  const links = [{ href: "/peluang-saya", label: "Peluang saya" }];
+  if (user.role === "penyelenggara") {
+    links.push(
+      { href: "/penyelenggara", label: "Dashboard" },
+      { href: "/kirim/saya", label: "Kiriman saya" }
+    );
   }
   if (user.role === "admin") {
-    links.push({ href: "/admin", label: "Admin" });
+    links.push({ href: "/admin", label: "Dashboard admin" });
   }
+  links.push({ href: "/profil", label: "Profil" });
   return links;
 }
 

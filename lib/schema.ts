@@ -9,6 +9,13 @@
 export const USER_ROLES = ["pengguna", "penyelenggara", "admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+/** Label peran untuk tampilan (docs/data-model.md §4). */
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  pengguna: "Pengguna",
+  penyelenggara: "Penyelenggara",
+  admin: "Admin",
+};
+
 export const CATEGORIES = [
   "beasiswa",
   "lomba",

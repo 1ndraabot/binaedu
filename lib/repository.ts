@@ -254,16 +254,51 @@ export async function listAdminLogs(): Promise<AdminLog[]> {
 
 /* ---------- Pengguna & sesi ---------- */
 
-/** Baris users milik sesi saat ini (auth.uid() → users.auth_id via RLS). */
+/** Baris users milik sesi saat ini.
+ *  Filter eksplisit auth_id: tanpa ini, admin membaca semua baris users
+ *  (policy) sehingga maybeSingle() gagal (PGRST116) dan sesi tidak terbaca. */
 export async function getMe(): Promise<User | null> {
+  const { data: sess } = await supabase.auth.getSession();
+  const authId = sess.session?.user.id;
+  if (!authId) return null;
   const { data, error } = await supabase
     .from("users")
     .select("id,email,name,role")
+    .eq("auth_id", authId)
     .maybeSingle();
   if (error) return null;
   if (!data) return null;
   const row = data as unknown as UserRow;
   return { id: row.id, email: row.email, name: row.name, role: row.role as User["role"] };
+}
+
+/* ---------- Statistik dashboard admin ---------- */
+
+export interface AdminStats {
+  /** Peluang tayang di dashboard publik. */
+  tayang: number;
+  /** Peluang terverifikasi yang lewat batas verifikasi 14 hari (§6.3 no. 4). */
+  cekUlang: number;
+}
+
+export async function adminStats(): Promise<AdminStats> {
+  const today = todayIso();
+  const [tayang, cekUlang] = await Promise.all([
+    supabase
+      .from("opportunities")
+      .select("slug", { count: "exact", head: true })
+      .eq("status", "terverifikasi")
+      .gte("deadline", today),
+    supabase
+      .from("opportunities")
+      .select("slug", { count: "exact", head: true })
+      .eq("status", "terverifikasi")
+      .lt("verified_until", today),
+  ]);
+  return {
+    tayang: tayang.count ?? 0,
+    cekUlang: cekUlang.count ?? 0,
+  };
 }
 
 /* ---------- Lokasi ---------- */

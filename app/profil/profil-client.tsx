@@ -8,11 +8,12 @@
  */
 import { useState } from "react";
 import Link from "next/link";
-import { CircleAlert } from "lucide-react";
-import { useProfile, useToast } from "@/lib/store";
+import { CircleAlert, ShieldCheck } from "lucide-react";
+import { useProfile, useSession, useToast } from "@/lib/store";
 import {
   REMINDER_CHANNELS,
   REMINDER_CHANNEL_LABELS,
+  USER_ROLE_LABELS,
   type ReminderChannel,
 } from "@/lib/schema";
 import { Button } from "@/components/ui";
@@ -23,8 +24,67 @@ const labelClass = "text-sm font-medium text-ink-900";
 
 export default function ProfilClient() {
   const { profile, saveProfile, clearProfile } = useProfile();
+  const { user, signOut } = useSession();
   const toast = useToast();
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Admin & penyelenggara: kartu akun, bukan formulir pelajar (jenjang/IPK
+  // tidak relevan untuk mereka). Formulir hanya untuk role pengguna/tamu.
+  if (user && user.role !== "pengguna") {
+    return (
+      <section className="bg-bg">
+        <div className="mx-auto max-w-[960px] px-4 py-8 md:px-6 md:py-12">
+          <h1 className="text-h2 text-ink-900 md:text-[32px]">Profil akun</h1>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-600">
+            Identitas akun kerja Anda di BinaEdu. Formulir profil pelajar tidak
+            berlaku untuk peran ini.
+          </p>
+
+          <div className="mt-8 max-w-md rounded-lg bg-surface p-5 shadow-card md:p-6">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-base font-bold text-blue-700"
+              >
+                {user.name.slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink-900">
+                  {user.name}
+                </p>
+                <p className="truncate text-xs text-ink-600">{user.email}</p>
+              </div>
+              <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                {USER_ROLE_LABELS[user.role]}
+              </span>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-2 border-t border-line pt-5">
+              {user.role === "penyelenggara" && (
+                <>
+                  <Button href="/penyelenggara" variant="secondary">
+                    Buka dashboard penyelenggara
+                  </Button>
+                  <Button href="/kirim" variant="ghost">
+                    Kirim kegiatan baru
+                  </Button>
+                </>
+              )}
+              {user.role === "admin" && (
+                <Button href="/admin" variant="secondary">
+                  Buka dashboard admin
+                </Button>
+              )}
+              <Button variant="ghost" onClick={() => signOut()}>
+                Keluar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

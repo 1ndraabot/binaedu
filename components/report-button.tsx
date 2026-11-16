@@ -59,7 +59,7 @@ export default function ReportButton({
           >
             Bagian mana yang keliru?
           </label>
-          <p className="mt-0.5 text-[11px] text-ink-500">{title}</p>
+          <p className="mt-0.5 text-[11px] text-ink-400">{title}</p>
           <textarea
             id={`lapor-${slug}`}
             value={message}

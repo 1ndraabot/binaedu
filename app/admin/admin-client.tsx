@@ -9,7 +9,13 @@
  */
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CircleAlert, ShieldCheck, Lock } from "lucide-react";
+import {
+  CircleAlert,
+  FileSearch,
+  Lock,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
 import {
   OPPORTUNITY_STATUS_LABELS,
   newVerification,
@@ -19,12 +25,15 @@ import {
   type Report,
 } from "@/lib/schema";
 import {
+  adminStats,
   approveKiriman,
   decideKiriman,
+  getMe,
   listAdminLogs,
   listKiriman,
   listReports,
   resolveReport,
+  type AdminStats,
 } from "@/lib/repository";
 import { formatDateShort, todayIso } from "@/lib/format";
 import { useSession, useToast } from "@/lib/store";
@@ -55,15 +64,23 @@ export default function AdminClient() {
   const toast = useToast();
   const { user } = useSession();
 
-  // Akses: hanya role admin (dicek dari baris users milik sesi)
-  const [me, setMe] = useState<{ id: string; role: string } | null>(null);
+  // Gate tiga keadaan: undefined = memuat, null = bukan admin, terisi = admin.
+  // (Sebelumnya kondisi tamu jatuh ke skeleton selamanya — halaman kosong.)
+  const [me, setMe] = useState<
+    { id: string; role: string; name: string; email: string } | null | undefined
+  >(undefined);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const { getMe } = await import("@/lib/repository");
         const row = await getMe();
-        if (!cancelled) setMe(row ? { id: row.id, role: row.role } : null);
+        if (!cancelled) {
+          setMe(
+            row
+              ? { id: row.id, role: row.role, name: row.name, email: row.email }
+              : null
+          );
+        }
       } catch {
         if (!cancelled) setMe(null);
       }
@@ -79,6 +96,7 @@ export default function AdminClient() {
   const [subs, setSubs] = useState<Opportunity[] | null>(null);
   const [reports, setReports] = useState<Report[] | null>(null);
   const [logs, setLogs] = useState<AdminLog[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [tab, setTab] = useState<"kiriman" | "laporan">("kiriman");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [action, setAction] = useState<"revisi" | "tolak" | null>(null);
@@ -90,19 +108,22 @@ export default function AdminClient() {
     let cancelled = false;
     (async () => {
       try {
-        const [kiriman, laporan, logDb] = await Promise.all([
+        const [kiriman, laporan, logDb, statistik] = await Promise.all([
           listKiriman(),
           listReports(),
           listAdminLogs(),
+          adminStats(),
         ]);
         if (cancelled) return;
         setSubs(kiriman);
         setReports(laporan);
         setLogs(logDb);
+        setStats(statistik);
       } catch {
         if (!cancelled) {
           setSubs([]);
           setReports([]);
+          setStats({ tayang: 0, cekUlang: 0 });
         }
       }
     })();
@@ -177,7 +198,7 @@ export default function AdminClient() {
   }
 
   /* ---------- Tampilan non-admin ---------- */
-  if (me === null) {
+  if (me === undefined) {
     return (
       <section className="bg-bg">
         <div className="mx-auto max-w-[1200px] px-4 py-16 md:px-6">
@@ -194,11 +215,12 @@ export default function AdminClient() {
         <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center md:px-6">
           <Lock className="h-14 w-14 text-ink-400" aria-hidden="true" />
           <h1 className="mt-5 text-h3 text-ink-900 md:text-[22px]">
-            Halaman khusus admin
+            {me === null ? "Masuk sebagai admin" : "Akses khusus admin"}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-600">
-            Antrean verifikasi hanya dapat diakses tim BinaEdu. Masuk dengan akun
-            admin untuk melanjutkan.
+            {me === null
+              ? "Dashboard admin terikat pada akun tim BinaEdu. Masuk dengan akun admin untuk melanjutkan."
+              : `Akun Anda (${user?.email}) bukan admin. Masuk dengan akun admin untuk melanjutkan.`}
           </p>
           <Button href="/masuk" variant="primary" className="mt-6">
             Masuk
@@ -219,10 +241,57 @@ export default function AdminClient() {
   return (
     <section className="bg-bg">
       <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 md:py-10">
-        <h1 className="text-h3 text-ink-900 md:text-[22px]">Antrean verifikasi</h1>
+        <h1 className="text-h3 text-ink-900 md:text-[22px]">Dashboard admin</h1>
         <p className="mt-1 text-sm text-ink-600">
           Periksa kiriman sebelum tayang. Target waktu verifikasi maksimal 2×24 jam.
         </p>
+
+        {/* Panel identitas admin */}
+        <div className="mt-4 flex items-center gap-3 rounded-lg bg-surface p-4 shadow-card">
+          <span
+            aria-hidden="true"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700"
+          >
+            {me.name.slice(0, 1).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-ink-900">{me.name}</p>
+            <p className="truncate text-xs text-ink-600">{me.email}</p>
+          </div>
+          <span className="ml-auto inline-flex shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+            Admin
+          </span>
+        </div>
+
+        {/* Kartu statistik */}
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="rounded-lg bg-surface p-4 shadow-card">
+            <FileSearch className="h-5 w-5 text-orange-700" aria-hidden="true" />
+            <p className="mt-2 text-2xl font-bold text-ink-900">
+              {list.filter((s) => s.status === "menunggu_verifikasi").length}
+            </p>
+            <p className="text-xs text-ink-600">Kiriman menunggu verifikasi</p>
+          </div>
+          <div className="rounded-lg bg-surface p-4 shadow-card">
+            <CircleAlert className="h-5 w-5 text-red-600" aria-hidden="true" />
+            <p className="mt-2 text-2xl font-bold text-ink-900">{openReports}</p>
+            <p className="text-xs text-ink-600">Laporan menunggu</p>
+          </div>
+          <div className="rounded-lg bg-surface p-4 shadow-card">
+            <TrendingUp className="h-5 w-5 text-green-700" aria-hidden="true" />
+            <p className="mt-2 text-2xl font-bold text-ink-900">
+              {stats?.tayang ?? "—"}
+            </p>
+            <p className="text-xs text-ink-600">Peluang tayang</p>
+          </div>
+          <div className="rounded-lg bg-surface p-4 shadow-card">
+            <ShieldCheck className="h-5 w-5 text-ink-600" aria-hidden="true" />
+            <p className="mt-2 text-2xl font-bold text-ink-900">
+              {stats?.cekUlang ?? "—"}
+            </p>
+            <p className="text-xs text-ink-600">Perlu cek ulang (&gt;14 hari)</p>
+          </div>
+        </div>
 
         {/* Tab kiriman / laporan */}
         <div className="mt-4 flex gap-2">
