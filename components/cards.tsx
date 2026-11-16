@@ -1,7 +1,8 @@
 /** Kartu fitur & kartu kategori sesuai docs/components.md §4.1–4.2. */
 import Link from "next/link";
 import { ArrowRight, type LucideIcon } from "lucide-react";
-import { CATEGORY_META, CATEGORIES, type Category } from "@/lib/data";
+import { CATEGORY_META } from "@/lib/data";
+import { CATEGORIES, CATEGORY_LABELS, type Category } from "@/lib/schema";
 
 interface FeatureCardProps {
   icon: LucideIcon;
@@ -70,7 +71,9 @@ export function CategoryCard({ category }: { category: Category }) {
       >
         <Icon className={`h-4 w-4 ${meta.darkText}`} aria-hidden="true" />
       </span>
-      <span className="text-sm font-medium text-ink-900">{category}</span>
+      <span className="text-sm font-medium text-ink-900">
+        {CATEGORY_LABELS[category]}
+      </span>
       <ArrowRight className="ml-auto h-4 w-4 text-ink-400" aria-hidden="true" />
     </Link>
   );

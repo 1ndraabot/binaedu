@@ -12,7 +12,7 @@ export default function AnnouncementBanner() {
     <div className="relative bg-yellow-400 px-10 py-2 text-center">
       <p className="text-[13px] leading-snug text-ink-900">
         Penyelenggara lomba atau beasiswa? Kirim info kegiatanmu{" "}
-        <a href="#" className="font-medium text-blue-600 underline">
+        <a href="/kirim" className="font-medium text-blue-600 underline">
           di sini
         </a>
         .

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import DashboardClient from "./dashboard-client";
-import { OPPORTUNITIES } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Cari Peluang — BinaEdu",
@@ -34,7 +33,7 @@ function CariFallback() {
 export default function CariPage() {
   return (
     <Suspense fallback={<CariFallback />}>
-      <DashboardClient data={OPPORTUNITIES} />
+      <DashboardClient />
     </Suspense>
   );
 }

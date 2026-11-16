@@ -173,7 +173,7 @@ export default function Home() {
                 Isi jenjang, jurusan, dan IPK-mu sekali saja. Kami tandai syarat
                 mana yang sudah dan belum terpenuhi.
               </p>
-              <Button href="#" variant="primary" className="mt-6">
+              <Button href="/profil" variant="primary" className="mt-6">
                 Isi profil
               </Button>
             </div>
@@ -210,7 +210,7 @@ export default function Home() {
           <p className="mt-8 text-sm text-white/90">
             Punya lomba atau beasiswa?{" "}
             <a
-              href="#"
+              href="/kirim"
               className="font-semibold text-yellow-400 underline underline-offset-2 focus-ring rounded-sm"
             >
               Bagikan ke ribuan pelajar

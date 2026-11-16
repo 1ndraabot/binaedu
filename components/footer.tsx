@@ -6,8 +6,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Tentang",
     links: [
-      { label: "Tentang BinaEdu", href: "#" },
-      { label: "Cara kerja verifikasi", href: "#" },
+      { label: "Tentang BinaEdu", href: "/tentang" },
+      { label: "Cara kerja verifikasi", href: "/tentang" },
       { label: "Kebijakan privasi", href: "#" },
     ],
   },
@@ -15,22 +15,22 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Untuk pengguna",
     links: [
       { label: "Cari peluang", href: "/cari" },
-      { label: "Kalender tenggat", href: "#" },
-      { label: "Peluang saya", href: "#" },
+      { label: "Kalender tenggat", href: "/kalender" },
+      { label: "Peluang saya", href: "/peluang-saya" },
     ],
   },
   {
     title: "Untuk penyelenggara",
     links: [
-      { label: "Kirim info kegiatan", href: "#" },
-      { label: "Kemitraan", href: "#" },
+      { label: "Kirim info kegiatan", href: "/kirim" },
+      { label: "Kemitraan", href: "/kontak" },
     ],
   },
   {
     title: "Kontak",
     links: [
       { label: "halo@binaedu.id", href: "mailto:halo@binaedu.id" },
-      { label: "Semarang, Jawa Tengah", href: "#" },
+      { label: "Halaman kontak", href: "/kontak" },
     ],
   },
 ];

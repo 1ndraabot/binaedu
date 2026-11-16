@@ -6,18 +6,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
+import { useSession } from "@/lib/store";
 
 const LINKS = [
   { href: "/", label: "Beranda" },
   { href: "/cari", label: "Cari Peluang" },
-  { href: "#", label: "Kalender" },
-  { href: "#", label: "Tentang" },
-  { href: "#", label: "Kontak" },
+  { href: "/kalender", label: "Kalender" },
+  { href: "/tentang", label: "Tentang" },
+  { href: "/kontak", label: "Kontak" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useSession();
 
   return (
     <header className="sticky top-0 z-40 bg-surface">
@@ -50,12 +52,25 @@ export default function Navbar() {
 
         {/* Aksi kanan — desktop */}
         <div className="hidden items-center gap-3 sm:flex">
-          <Button href="#" variant="ghost" size="sm">
-            Masuk
-          </Button>
-          <Button href="#" variant="secondary" size="sm">
-            Daftar
-          </Button>
+          {user ? (
+            <>
+              <span className="max-w-[160px] truncate text-sm font-medium text-ink-900">
+                {user.name}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                Keluar
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button href="/masuk" variant="ghost" size="sm">
+                Masuk
+              </Button>
+              <Button href="/daftar" variant="secondary" size="sm">
+                Daftar
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Tombol menu — mobile */}
@@ -104,12 +119,25 @@ export default function Navbar() {
             ))}
           </nav>
           <div className="mt-auto flex flex-col gap-3 px-4 pb-8">
-            <Button href="#" variant="secondary">
-              Daftar
-            </Button>
-            <Button href="#" variant="ghost">
-              Masuk
-            </Button>
+            {user ? (
+              <>
+                <span className="px-3 text-sm font-medium text-ink-900">
+                  {user.name}
+                </span>
+                <Button variant="secondary" onClick={() => { setOpen(false); signOut(); }}>
+                  Keluar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button href="/daftar" variant="secondary" onClick={() => setOpen(false)}>
+                  Daftar
+                </Button>
+                <Button href="/masuk" variant="ghost" onClick={() => setOpen(false)}>
+                  Masuk
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
