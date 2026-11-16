@@ -5,10 +5,10 @@
  * Langkah pendek dengan indikator kemajuan; gaya bahasa sesuai content-voice.md
  * ("Anda" untuk penyelenggara). Kiriman masuk antrean admin (Supabase, PRD F6).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleAlert, CircleCheck, ChevronLeft } from "lucide-react";
+import { CircleAlert, CircleCheck, ChevronLeft, Lock } from "lucide-react";
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -81,6 +81,85 @@ export default function KirimClient() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Gerbang peran (PRD F6): formulir untuk penyelenggara.
+  // undefined = sesi sedang diperiksa; null = tamu.
+  const [me, setMe] = useState<{ role: string } | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const row = await getMe();
+        if (!cancelled) setMe(row ? { role: row.role } : null);
+      } catch {
+        if (!cancelled) setMe(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Panel penerangan untuk yang bukan penyelenggara
+  if (me !== undefined && me !== null && me.role === "pengguna") {
+    return (
+      <section className="bg-bg">
+        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center md:px-6">
+          <Lock className="h-14 w-14 text-ink-400" aria-hidden="true" />
+          <h1 className="mt-5 text-h3 text-ink-900 md:text-[22px]">
+            Formulir ini untuk penyelenggara
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-600">
+            Kiriman kegiatan hanya dapat dikirim oleh pihak penyelenggara
+            (panitia, BEM, yayasan, atau institusi). Sebagai pelajar/mahasiswa,
+            kamu tetap bisa mencari dan menyimpan peluang.
+          </p>
+          <Button href="/cari" variant="primary" className="mt-6">
+            Cari peluang
+          </Button>
+          <p className="mt-4 text-xs text-ink-400">
+            Tertarik menjadi penyelenggara mitra?{" "}
+            <Link
+              href="/kontak"
+              className="text-blue-600 underline underline-offset-2 focus-ring rounded-sm"
+            >
+              Hubungi kami
+            </Link>
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  // Tamu: diminta masuk terlebih dahulu
+  if (me !== undefined && me === null) {
+    return (
+      <section className="bg-bg">
+        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center md:px-6">
+          <Lock className="h-14 w-14 text-ink-400" aria-hidden="true" />
+          <h1 className="mt-5 text-h3 text-ink-900 md:text-[22px]">
+            Masuk untuk mengirim info kegiatan
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-600">
+            Kiriman terikat pada akun penyelenggara agar status verifikasinya
+            dapat Anda pantau.
+          </p>
+          <Button href="/masuk" variant="primary" className="mt-6">
+            Masuk
+          </Button>
+          <p className="mt-4 text-xs text-ink-400">
+            Belum punya akun?{" "}
+            <Link
+              href="/daftar"
+              className="text-blue-600 underline underline-offset-2 focus-ring rounded-sm"
+            >
+              Daftar
+            </Link>
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -186,6 +265,19 @@ export default function KirimClient() {
           <Button href="/" variant="primary" className="mt-6">
             Kembali ke beranda
           </Button>
+        </div>
+      </section>
+    );
+  }
+
+  // Sesi sedang diperiksa: kerangka halaman
+  if (me === undefined) {
+    return (
+      <section className="bg-bg">
+        <div className="mx-auto max-w-[960px] px-4 py-8 md:px-6 md:py-12">
+          <div className="h-8 w-64 animate-pulse rounded-md bg-line" />
+          <div className="mt-8 h-10 w-72 animate-pulse rounded-md bg-line" />
+          <div className="mt-6 h-96 max-w-lg animate-pulse rounded-lg bg-line" />
         </div>
       </section>
     );

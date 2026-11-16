@@ -203,6 +203,19 @@ export async function listKiriman(): Promise<Opportunity[]> {
   return ((data ?? []) as unknown as OppRow[]).map((r) => mapOpportunity(r, paths));
 }
 
+/** Kiriman milik sesi saat ini (RLS mengembalikan miliknya + yang tayang). */
+export async function listKirimanSaya(userId: string): Promise<Opportunity[]> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select(OPP_SELECT)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const paths = await locationPathMap();
+  return ((data ?? []) as unknown as OppRow[])
+    .map((r) => mapOpportunity(r, paths))
+    .filter((o) => o.createdBy === userId);
+}
+
 /* ---------- Laporan & log admin ---------- */
 
 export async function listReports(): Promise<Report[]> {

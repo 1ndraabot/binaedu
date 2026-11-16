@@ -4,9 +4,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Menu, X } from "lucide-react";
+import { ChevronDown, GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useSession } from "@/lib/store";
+import type { User } from "@/lib/schema";
 
 const LINKS = [
   { href: "/", label: "Beranda" },
@@ -16,10 +17,27 @@ const LINKS = [
   { href: "/kontak", label: "Kontak" },
 ];
 
+/** Tautan milik sesi — sesuai peran (docs/components.md §2.1). */
+function sessionLinks(user: User) {
+  const links = [
+    { href: "/peluang-saya", label: "Peluang saya" },
+    { href: "/profil", label: "Profil" },
+  ];
+  if (user.role === "penyelenggara" || user.role === "admin") {
+    links.push({ href: "/kirim/saya", label: "Kiriman saya" });
+  }
+  if (user.role === "admin") {
+    links.push({ href: "/admin", label: "Admin" });
+  }
+  return links;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user, signOut } = useSession();
+  const links = user ? sessionLinks(user) : [];
 
   return (
     <header className="sticky top-0 z-40 bg-surface">
@@ -53,14 +71,73 @@ export default function Navbar() {
         {/* Aksi kanan — desktop */}
         <div className="hidden items-center gap-3 sm:flex">
           {user ? (
-            <>
-              <span className="max-w-[160px] truncate text-sm font-medium text-ink-900">
-                {user.name}
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                Keluar
-              </Button>
-            </>
+            <div className="relative">
+              <button
+                type="button"
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-2.5 text-sm font-medium text-ink-900 hover:bg-bg focus-ring"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700"
+                >
+                  {user.name.slice(0, 1).toUpperCase()}
+                </span>
+                <span className="max-w-[140px] truncate">{user.name}</span>
+                <ChevronDown
+                  className={`h-4 w-4 text-ink-600 transition-transform duration-200 ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {menuOpen && (
+                <>
+                  {/* Penangkap klik di luar menu */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setMenuOpen(false)}
+                    aria-hidden="true"
+                  />
+                  <div
+                    role="menu"
+                    aria-label={`Menu ${user.name}`}
+                    className="absolute right-0 z-50 mt-2 w-52 rounded-lg border border-line bg-surface p-2 shadow-card"
+                  >
+                    <p className="truncate px-3 pb-1 pt-1.5 text-xs text-ink-500">
+                      {user.email}
+                    </p>
+                    {links.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className={`block rounded-md px-3 py-2 text-sm text-ink-800 hover:bg-bg focus-ring ${
+                          pathname === link.href ? "font-semibold text-blue-600" : ""
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        signOut();
+                      }}
+                      className="mt-1 block w-full rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-bg focus-ring"
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <>
               <Button href="/masuk" variant="ghost" size="sm">
@@ -121,9 +198,23 @@ export default function Navbar() {
           <div className="mt-auto flex flex-col gap-3 px-4 pb-8">
             {user ? (
               <>
-                <span className="px-3 text-sm font-medium text-ink-900">
+                <span className="truncate px-3 text-sm font-medium text-ink-900">
                   {user.name}
                 </span>
+                {links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className={`rounded-md px-3 py-3 text-base focus-ring ${
+                      link.href === pathname
+                        ? "font-semibold text-blue-600"
+                        : "text-ink-800"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
                 <Button variant="secondary" onClick={() => { setOpen(false); signOut(); }}>
                   Keluar
                 </Button>
