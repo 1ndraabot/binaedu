@@ -10,9 +10,24 @@ const MONTHS_SHORT = [
   "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
 ];
 
+const MONTHS_FULL = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
+
 export function formatDateShort(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+export function formatDateLong(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  return `${d.getDate()} ${MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** "November 2026" untuk judul kalender. */
+export function formatMonthYear(year: number, month: number): string {
+  return `${MONTHS_FULL[month]} ${year}`;
 }
 
 /** Selisih hari dari hari ini (negatif = sudah lewat). */
@@ -64,4 +79,12 @@ export function updatedInfo(iso: string): string {
 export function formatFee(fee: number): string {
   if (fee === 0) return "Gratis";
   return `Rp${fee.toLocaleString("id-ID")}`;
+}
+
+/** Tanggal hari ini ISO yyyy-mm-dd (WIB) — hanya untuk client/event handler. */
+export function todayIso(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
+    now.getDate()
+  ).padStart(2, "0")}`;
 }

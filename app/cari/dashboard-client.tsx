@@ -2,25 +2,32 @@
 
 /**
  * Dashboard & pencarian — docs/layouts.md §3, komponen docs/components.md §5.
- * Tanpa doodle/blob (aturan layouts.md §1). Filter bekerja di atas mock data.
+ * Tanpa doodle/blob (aturan layouts.md §1). Penyaringan bekerja di atas data Supabase.
  */
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, SearchX, SlidersHorizontal, X } from "lucide-react";
+import { CATEGORY_META } from "@/lib/data";
 import {
   CATEGORIES,
-  CATEGORY_META,
+  CATEGORY_LABELS,
   FIELDS,
   LEVELS,
+  SCOPE_LABELS,
   type Category,
   type Opportunity,
-} from "@/lib/data";
+} from "@/lib/schema";
 import { daysUntil, deadlineInfo } from "@/lib/format";
+import { listAktif, listBerakhir } from "@/lib/repository";
 import OpportunityCard from "@/components/opportunity-card";
 import { Button } from "@/components/ui";
 import { DoodleZigzag } from "@/components/doodles";
 
-const SCOPE_OPTIONS = ["Semarang", "Nasional"];
+const SCOPE_OPTIONS: Option[] = [
+  { value: "lokal", label: SCOPE_LABELS.lokal },
+  { value: "regional", label: SCOPE_LABELS.regional },
+  { value: "nasional", label: SCOPE_LABELS.nasional },
+];
 const FEE_OPTIONS = [
   { value: "gratis", label: "Gratis" },
   { value: "berbayar", label: "Berbayar" },
@@ -45,7 +52,7 @@ function FilterGroup({
   onToggle,
 }: {
   title: string;
-  options: (string | Option)[];
+  options: readonly (string | Option)[];
   selected: Set<string>;
   onToggle: (value: string) => void;
 }) {
@@ -93,17 +100,29 @@ function EmptyState({ onClear }: { onClear: () => void }) {
   );
 }
 
-export default function DashboardClient({
-  data,
-}: {
-  data: Opportunity[];
-}) {
+export default function DashboardClient() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("kategori") ?? "Semua";
 
+  // Data dari Supabase — dimuat di dalam Suspense (diizinkan membaca waktu)
+  const [data, setData] = useState<Opportunity[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listAktif(), listBerakhir()])
+      .then(([aktif, berakhir]) => {
+        if (!cancelled) setData([...aktif, ...berakhir]);
+      })
+      .catch(() => {
+        if (!cancelled) setData([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(
-    (CATEGORIES as string[]).includes(initialCategory) ? initialCategory : "Semua"
+    (CATEGORIES as readonly string[]).includes(initialCategory) ? initialCategory : "Semua"
   );
   const [filters, setFilters] = useState<FilterGroups>({});
   const [sort, setSort] = useState<"deadline" | "newest">("deadline");
@@ -134,7 +153,7 @@ export default function DashboardClient({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = data.filter((o) => {
+    const list = (data ?? []).filter((o) => {
       if (category !== "Semua" && o.category !== category) return false;
       if (q && !`${o.title} ${o.organizer}`.toLowerCase().includes(q)) return false;
       if (filters.level?.size && !filters.level.has(o.level)) return false;
@@ -157,7 +176,7 @@ export default function DashboardClient({
     });
     return [...list].sort((a, b) =>
       sort === "newest"
-        ? b.updatedAt.localeCompare(a.updatedAt)
+        ? b.lastUpdatedAt.localeCompare(a.lastUpdatedAt)
         : daysUntil(a.deadline) - daysUntil(b.deadline)
     );
   }, [data, query, category, filters, sort]);
@@ -168,6 +187,27 @@ export default function DashboardClient({
   });
 
   const shown = filtered.slice(0, visibleCount);
+
+  // Belum termuat: kerangka kartu (gaya docs/components.md §9 skeleton)
+  if (data === null) {
+    return (
+      <section className="bg-surface">
+        <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 md:py-10">
+          <div className="h-6 w-40 animate-pulse rounded-md bg-line" />
+          <div className="mt-4 h-12 w-full animate-pulse rounded-full bg-line" />
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div
+                key={i}
+                className="h-44 animate-pulse rounded-lg bg-line"
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const filterPanel: ReactNode = (
     <div className="space-y-5">
@@ -263,7 +303,7 @@ export default function DashboardClient({
                 }`}
               >
                 {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
-                {cat}
+                {cat === "Semua" ? "Semua" : CATEGORY_LABELS[cat as Category]}
               </button>
             );
           })}
