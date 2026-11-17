@@ -39,6 +39,9 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, signOut } = useSession();
   const links = user ? sessionLinks(user) : [];
+  // Penyelenggara & admin bekerja di dashboard masing-masing —
+  // menu publik disembunyikan (docs/layouts.md §9, §8).
+  const showPublicNav = !user || user.role === "pengguna";
 
   return (
     <header className="sticky top-0 z-40 bg-surface">
@@ -50,24 +53,26 @@ export default function Navbar() {
         </Link>
 
         {/* Tautan tengah — desktop */}
-        <nav aria-label="Navigasi utama" className="hidden items-center gap-7 md:flex">
-          {LINKS.map((link) => {
-            const active = link.href === pathname;
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={`text-sm transition-colors duration-200 focus-ring rounded-sm ${
-                  active
-                    ? "font-semibold text-blue-600"
-                    : "text-ink-800 hover:text-blue-600"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {showPublicNav && (
+          <nav aria-label="Navigasi utama" className="hidden items-center gap-7 md:flex">
+            {LINKS.map((link) => {
+              const active = link.href === pathname;
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={`text-sm transition-colors duration-200 focus-ring rounded-sm ${
+                    active
+                      ? "font-semibold text-blue-600"
+                      : "text-ink-800 hover:text-blue-600"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Aksi kanan — desktop */}
         <div className="hidden items-center gap-3 sm:flex">
@@ -180,22 +185,24 @@ export default function Navbar() {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <nav aria-label="Menu seluler" className="flex flex-col gap-1 px-4 py-4">
-            {LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className={`rounded-md px-3 py-3 text-base focus-ring ${
-                  link.href === pathname
-                    ? "font-semibold text-blue-600"
-                    : "text-ink-800"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {showPublicNav && (
+            <nav aria-label="Menu seluler" className="flex flex-col gap-1 px-4 py-4">
+              {LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className={`rounded-md px-3 py-3 text-base focus-ring ${
+                    link.href === pathname
+                      ? "font-semibold text-blue-600"
+                      : "text-ink-800"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="mt-auto flex flex-col gap-3 px-4 pb-8">
             {user ? (
               <>
