@@ -4,7 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, GraduationCap, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useSession } from "@/lib/store";
 import type { User } from "@/lib/schema";
@@ -46,10 +46,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-surface">
       <div className="mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-4 md:px-6">
-        {/* Logo: ikon biru + wordmark tebal (docs/illustration-imagery.md §7) */}
-        <Link href="/" className="flex items-center gap-2 focus-ring rounded-md">
-          <GraduationCap className="h-7 w-7 text-blue-600" aria-hidden="true" />
-          <span className="text-lg font-bold text-ink-900">BinaEdu</span>
+        {/* Logo BinaEdu */}
+        <Link href="/" className="flex items-center focus-ring rounded-md">
+          <img
+            src="/logo-binaedu.jpeg"
+            alt="BinaEdu — Temukan Peluang, Raih Masa Depan"
+            className="h-12 w-auto object-contain mix-blend-multiply md:h-14"
+          />
         </Link>
 
         {/* Tautan tengah — desktop */}
@@ -172,10 +175,17 @@ export default function Navbar() {
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col bg-surface sm:hidden">
           <div className="flex h-[72px] items-center justify-between px-4">
-            <span className="flex items-center gap-2">
-              <GraduationCap className="h-7 w-7 text-blue-600" aria-hidden="true" />
-              <span className="text-lg font-bold text-ink-900">BinaEdu</span>
-            </span>
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="flex items-center focus-ring rounded-md"
+            >
+              <img
+                src="/logo-binaedu.jpeg"
+                alt="BinaEdu — Temukan Peluang, Raih Masa Depan"
+                className="h-12 w-auto object-contain mix-blend-multiply"
+              />
+            </Link>
             <button
               type="button"
               aria-label="Tutup menu"
